@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import { Menu, X, Twitter } from "lucide-react"
 import WalletButton from "@/components/wallet-button"
 import WalletBalance from "@/components/wallet-balance"
 
@@ -30,6 +30,9 @@ export default function Navbar() {
           <Link href="/docs" className="text-sm font-medium hover:text-primary">
             Docs
           </Link>
+          <Link href="/x-posts" className="text-sm font-medium hover:text-primary flex items-center gap-1">
+            <Twitter size={16} className="text-[#1DA1F2]" />X Posts
+          </Link>
           <Link
             href="/create"
             className="text-sm font-medium bg-[#F26119] text-white px-4 py-2 rounded-md hover:bg-[#F26119]/90 transition-colors"
@@ -55,6 +58,13 @@ export default function Navbar() {
             </Link>
             <Link href="/docs" className="text-sm font-medium hover:text-primary" onClick={() => setIsMenuOpen(false)}>
               Docs
+            </Link>
+            <Link
+              href="/x-posts"
+              className="text-sm font-medium hover:text-primary flex items-center gap-1"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Twitter size={16} className="text-[#1DA1F2]" />X Posts
             </Link>
             <Link
               href="/create"

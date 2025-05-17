@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Flame, X, Check, Loader2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Flame, X, Check, Loader2, Twitter } from "lucide-react"
 import { useSolanaWallet } from "@/hooks/use-solana-wallet"
 import { useToast } from "@/components/ui/use-toast"
 import { getRoastById, updateRoastStatus } from "@/lib/roast-service"
@@ -12,9 +14,11 @@ import { formatCryptoAmount } from "@/lib/currencies"
 import { type Roast, RoastStatus } from "@/types/roast"
 import Link from "next/link"
 import WalletButton from "@/components/wallet-button"
+import XPostModal from "@/components/x-post-modal"
 
 export default function RoastRequestPage() {
   const params = useParams()
+  const router = useRouter()
   const id = params.id as string
   const { connected, publicKey, sendSol } = useSolanaWallet()
   const { toast } = useToast()
@@ -22,6 +26,8 @@ export default function RoastRequestPage() {
   const [roast, setRoast] = useState<Roast | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
+  const [shareOnX, setShareOnX] = useState(false)
+  const [xPostModalOpen, setXPostModalOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -73,6 +79,11 @@ export default function RoastRequestPage() {
           title: "Roast Accepted",
           description: `You've received ${formatCryptoAmount(roast.amount, roast.currency)}!`,
         })
+
+        // If user wants to share on X, open the modal
+        if (shareOnX) {
+          setXPostModalOpen(true)
+        }
       }
     } catch (error) {
       toast({
@@ -108,6 +119,11 @@ export default function RoastRequestPage() {
     } finally {
       setProcessing(false)
     }
+  }
+
+  const handleXPostComplete = () => {
+    // Navigate to feed after posting to X
+    router.push("/feed")
   }
 
   if (loading) {
@@ -181,6 +197,23 @@ export default function RoastRequestPage() {
                   </p>
                 </div>
               </div>
+
+              {connected && (
+                <div className="flex items-start space-x-2 pt-2">
+                  <Checkbox
+                    id="share-on-x"
+                    checked={shareOnX}
+                    onCheckedChange={(checked) => setShareOnX(checked as boolean)}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <Label htmlFor="share-on-x" className="flex items-center gap-1.5">
+                      <Twitter size={16} className="text-[#1DA1F2]" />
+                      Share on X when accepted
+                    </Label>
+                    <p className="text-sm text-muted-foreground">Post this roast to X (Twitter) when you accept it</p>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -195,6 +228,19 @@ export default function RoastRequestPage() {
                     : "You rejected this roast. The funds have been returned to the sender."}
                 </p>
               </div>
+
+              {roast.status === RoastStatus.ACCEPTED && (
+                <div className="flex justify-center">
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2 text-[#1DA1F2] border-[#1DA1F2] hover:bg-[#1DA1F2]/10"
+                    onClick={() => setXPostModalOpen(true)}
+                  >
+                    <Twitter size={16} />
+                    Share on X
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </CardContent>
@@ -210,13 +256,28 @@ export default function RoastRequestPage() {
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
               Reject
             </Button>
-            <Button className="w-full sm:w-auto gap-2" onClick={handleAccept} disabled={processing || !connected}>
+            <Button
+              className="w-full sm:w-auto gap-2 bg-[#F26119] hover:bg-[#F26119]/90"
+              onClick={handleAccept}
+              disabled={processing || !connected}
+            >
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Accept & Get Paid
             </Button>
           </CardFooter>
         )}
       </Card>
+
+      <XPostModal
+        open={xPostModalOpen}
+        onOpenChange={setXPostModalOpen}
+        roasterName={roast.senderAddress.slice(0, 6)}
+        receiverName={publicKey.slice(0, 6)}
+        message={roast.message}
+        amount={roast.amount}
+        currency={roast.currency}
+        onComplete={handleXPostComplete}
+      />
     </div>
   )
 }

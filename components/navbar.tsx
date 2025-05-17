@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { Menu, X, Twitter } from "lucide-react"
+import { Menu, X, Twitter, Sparkles } from "lucide-react"
 import WalletButton from "@/components/wallet-button"
 import WalletBalance from "@/components/wallet-balance"
 
@@ -32,6 +32,10 @@ export default function Navbar() {
           </Link>
           <Link href="/x-posts" className="text-sm font-medium hover:text-primary flex items-center gap-1">
             <Twitter size={16} className="text-[#1DA1F2]" />X Posts
+          </Link>
+          <Link href="/nft-marketplace" className="text-sm font-medium hover:text-primary flex items-center gap-1">
+            <Sparkles size={16} className="text-yellow-500" />
+            NFT Market
           </Link>
           <Link
             href="/create"
@@ -65,6 +69,14 @@ export default function Navbar() {
               onClick={() => setIsMenuOpen(false)}
             >
               <Twitter size={16} className="text-[#1DA1F2]" />X Posts
+            </Link>
+            <Link
+              href="/nft-marketplace"
+              className="text-sm font-medium hover:text-primary flex items-center gap-1"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <Sparkles size={16} className="text-yellow-500" />
+              NFT Market
             </Link>
             <Link
               href="/create"

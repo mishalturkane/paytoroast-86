@@ -1,9 +1,7 @@
 "use client"
 
 import Link from "next/link"
-
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,9 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Flame, Copy, Check } from "lucide-react"
 import { useSolanaWallet } from "@/hooks/use-solana-wallet"
 import { useToast } from "@/components/ui/use-toast"
-import { createRoast } from "@/lib/roast-service"
 import { currencies } from "@/lib/currencies"
 import WalletButton from "@/components/wallet-button"
+import { createRoast } from "@/app/actions/create-roast"
 
 export default function CreateRoastPage() {
   const router = useRouter()
@@ -31,7 +29,7 @@ export default function CreateRoastPage() {
   const [roastId, setRoastId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!connected) {
@@ -64,15 +62,29 @@ export default function CreateRoastPage() {
     setIsSubmitting(true)
 
     try {
-      // Create the roast
-      const roast = createRoast(message, Number.parseFloat(amount), currency, publicKey)
+      // Create a FormData object to pass to the server action
+      const formData = new FormData()
+      formData.append("message", message)
+      formData.append("amount", amount)
+      formData.append("currency", currency)
+      formData.append("senderAddress", publicKey)
 
-      setRoastId(roast.id)
+      // Call the server action
+      const result = await createRoast(formData)
 
-      toast({
-        title: "Roast Created",
-        description: "Your roast has been created successfully!",
-      })
+      if (result.success && result.roastId) {
+        setRoastId(result.roastId)
+        toast({
+          title: "Roast Created",
+          description: "Your roast has been created successfully!",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to create roast. Please try again.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
       toast({
         title: "Error",

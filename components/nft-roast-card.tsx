@@ -22,6 +22,8 @@ import { motion } from "framer-motion"
 import { formatCryptoAmount } from "@/lib/currencies"
 import type { Roast } from "@/types/roast"
 import Link from "next/link"
+import { useSolanaWallet } from "@/hooks/use-solana-wallet"
+import { mintNFT } from "@/app/actions/mint-nft"
 
 // Update the NFTRoastCardProps interface to include roaster and roastee information
 interface NFTRoastCardProps {
@@ -45,6 +47,7 @@ export default function NFTRoastCard({
   const [isPurchasing, setIsPurchasing] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const { toast } = useToast()
+  const { connected, publicKey } = useSolanaWallet()
 
   // Calculate NFT price based on X post insights (likes, comments, views)
   // Higher engagement = higher price
@@ -58,9 +61,6 @@ export default function NFTRoastCard({
 
   // Round to 2 decimal places and ensure minimum price of 0.1 SOL
   const nftPrice = Math.max(Math.round(calculatedPrice * 100) / 100, 0.1)
-
-  // Replace the previous random price with our calculated price:
-  // const nftPrice = useRef(Math.round((Math.random() * 1.9 + 0.1) * 100) / 100).current
 
   // Generate a random number of available NFTs between 1 and 10
   const availableNFTs = useRef(Math.floor(Math.random() * 10) + 1).current
@@ -111,17 +111,49 @@ export default function NFTRoastCard({
   }
 
   // Handle NFT purchase
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
+    if (!connected) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet to purchase this NFT",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsPurchasing(true)
 
-    // Simulate purchase process
-    setTimeout(() => {
-      setIsPurchasing(false)
+    try {
+      // Create a FormData object to pass to the server action
+      const formData = new FormData()
+      formData.append("roastId", roast.id)
+      formData.append("buyerAddress", publicKey)
+      formData.append("price", nftPrice.toString())
+
+      // Call the server action
+      const result = await mintNFT(formData)
+
+      if (result.success) {
+        toast({
+          title: "NFT Purchased!",
+          description: `You've successfully purchased the "${roast.message.substring(0, 20)}..." NFT for ${nftPrice} SOL.`,
+        })
+      } else {
+        toast({
+          title: "Purchase Failed",
+          description: result.error || "Failed to purchase NFT. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
       toast({
-        title: "NFT Purchased!",
-        description: `You've successfully purchased the "${roast.message.substring(0, 20)}..." NFT for ${nftPrice} SOL.`,
+        title: "Error",
+        description: "Failed to purchase NFT. Please try again.",
+        variant: "destructive",
       })
-    }, 1500)
+    } finally {
+      setIsPurchasing(false)
+    }
   }
 
   // Handle card flip animation
@@ -275,7 +307,7 @@ export default function NFTRoastCard({
             <Button
               className="w-full mt-3 bg-[#F26119] hover:bg-[#F26119]/90"
               onClick={handlePurchase}
-              disabled={isPurchasing}
+              disabled={isPurchasing || !connected}
             >
               {isPurchasing ? (
                 <>

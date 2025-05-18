@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Twitter, Loader2 } from "lucide-react"
 import XPostPreview from "@/components/x-post-preview"
 import { useToast } from "@/components/ui/use-toast"
+import { shareOnX } from "@/app/actions/share-on-x"
 
 interface XPostModalProps {
   open: boolean
@@ -25,6 +26,7 @@ interface XPostModalProps {
   amount: number
   currency: string
   onComplete: () => void
+  roastId?: string
 }
 
 export default function XPostModal({
@@ -36,6 +38,7 @@ export default function XPostModal({
   amount,
   currency,
   onComplete,
+  roastId = "",
 }: XPostModalProps) {
   const [isPosting, setIsPosting] = useState(false)
   const [includeRoastText, setIncludeRoastText] = useState(true)
@@ -44,18 +47,42 @@ export default function XPostModal({
   const handlePost = async () => {
     setIsPosting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      // Create a FormData object to pass to the server action
+      const formData = new FormData()
+      formData.append("roastId", roastId)
+      formData.append("roasterName", roasterName)
+      formData.append("roasteeName", receiverName)
+      formData.append("includeFullText", includeRoastText.toString())
 
-    setIsPosting(false)
-    onOpenChange(false)
+      // Call the server action
+      const result = await shareOnX(formData)
 
-    toast({
-      title: "Posted to X!",
-      description: "Your roast has been shared on X (Twitter).",
-    })
+      if (result.success) {
+        onOpenChange(false)
 
-    onComplete()
+        toast({
+          title: "Posted to X!",
+          description: "Your roast has been shared on X (Twitter).",
+        })
+
+        onComplete()
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to post to X. Please try again.",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to post to X. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsPosting(false)
+    }
   }
 
   return (

@@ -9,18 +9,20 @@ import { Label } from "@/components/ui/label"
 import { Flame, X, Check, Loader2, Twitter } from "lucide-react"
 import { useSolanaWallet } from "@/hooks/use-solana-wallet"
 import { useToast } from "@/components/ui/use-toast"
-import { getRoastById, updateRoastStatus } from "@/lib/roast-service"
+import { getRoastById } from "@/lib/roast-service"
 import { formatCryptoAmount } from "@/lib/currencies"
 import { type Roast, RoastStatus } from "@/types/roast"
 import Link from "next/link"
 import WalletButton from "@/components/wallet-button"
 import XPostModal from "@/components/x-post-modal"
+import { acceptRoast } from "@/app/actions/accept-roast"
+import { rejectRoast } from "@/app/actions/reject-roast"
 
 export default function RoastRequestPage() {
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
-  const { connected, publicKey, sendSol } = useSolanaWallet()
+  const { connected, publicKey } = useSolanaWallet()
   const { toast } = useToast()
 
   const [roast, setRoast] = useState<Roast | null>(null)
@@ -57,22 +59,18 @@ export default function RoastRequestPage() {
     setProcessing(true)
 
     try {
-      // For demo purposes, we'll only handle SOL transactions for real
-      // Other currencies would be simulated
-      let txId = ""
+      // Create a FormData object to pass to the server action
+      const formData = new FormData()
+      formData.append("roastId", roast.id)
+      formData.append("receiverAddress", publicKey)
+      formData.append("shareOnX", shareOnX.toString())
 
-      if (roast.currency === "sol") {
-        // Send actual SOL transaction
-        txId = await sendSol(roast.amount, roast.senderAddress)
-      } else {
-        // Simulate transaction for other currencies
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        txId = "tx" + Math.random().toString(36).substring(2, 15)
-      }
+      // Call the server action
+      const result = await acceptRoast(formData)
 
-      if (txId) {
-        // Update roast status
-        const updatedRoast = updateRoastStatus(roast.id, RoastStatus.ACCEPTED, txId)
+      if (result.success) {
+        // Refresh the roast data
+        const updatedRoast = getRoastById(roast.id)
         setRoast(updatedRoast)
 
         toast({
@@ -84,6 +82,12 @@ export default function RoastRequestPage() {
         if (shareOnX) {
           setXPostModalOpen(true)
         }
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to accept roast. Please try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       toast({
@@ -96,20 +100,35 @@ export default function RoastRequestPage() {
     }
   }
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!roast) return
 
     setProcessing(true)
 
     try {
-      // Update roast status
-      const updatedRoast = updateRoastStatus(roast.id, RoastStatus.REJECTED)
-      setRoast(updatedRoast)
+      // Create a FormData object to pass to the server action
+      const formData = new FormData()
+      formData.append("roastId", roast.id)
 
-      toast({
-        title: "Roast Rejected",
-        description: "The roast has been rejected and funds returned to sender.",
-      })
+      // Call the server action
+      const result = await rejectRoast(formData)
+
+      if (result.success) {
+        // Refresh the roast data
+        const updatedRoast = getRoastById(roast.id)
+        setRoast(updatedRoast)
+
+        toast({
+          title: "Roast Rejected",
+          description: "The roast has been rejected and funds returned to sender.",
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to reject roast. Please try again.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
       toast({
         title: "Error",

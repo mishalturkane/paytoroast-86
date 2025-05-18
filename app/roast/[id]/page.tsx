@@ -8,12 +8,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Flame, X, Check, Loader2, Twitter } from "lucide-react"
 import { useSolanaWallet } from "@/hooks/use-solana-wallet"
+import { useTwitterAuth } from "@/components/twitter-auth-provider"
 import { useToast } from "@/components/ui/use-toast"
 import { getRoastById } from "@/lib/roast-service"
 import { formatCryptoAmount } from "@/lib/currencies"
 import { type Roast, RoastStatus } from "@/types/roast"
 import Link from "next/link"
 import WalletButton from "@/components/wallet-button"
+import TwitterLoginButton from "@/components/twitter-login-button"
 import XPostModal from "@/components/x-post-modal"
 import { acceptRoast } from "@/app/actions/accept-roast"
 import { rejectRoast } from "@/app/actions/reject-roast"
@@ -23,12 +25,13 @@ export default function RoastRequestPage() {
   const router = useRouter()
   const id = params.id as string
   const { connected, publicKey } = useSolanaWallet()
+  const { isConnected: isTwitterConnected, user: twitterUser } = useTwitterAuth()
   const { toast } = useToast()
 
   const [roast, setRoast] = useState<Roast | null>(null)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
-  const [shareOnX, setShareOnX] = useState(false)
+  const [shareOnX, setShareOnX] = useState(true)
   const [xPostModalOpen, setXPostModalOpen] = useState(false)
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function RoastRequestPage() {
   }, [id, toast])
 
   const handleAccept = async () => {
-    if (!roast || !connected) return
+    if (!roast || !connected || !isTwitterConnected) return
 
     setProcessing(true)
 
@@ -64,6 +67,12 @@ export default function RoastRequestPage() {
       formData.append("roastId", roast.id)
       formData.append("receiverAddress", publicKey)
       formData.append("shareOnX", shareOnX.toString())
+
+      // Add Twitter info
+      if (twitterUser) {
+        formData.append("twitterUsername", twitterUser.username)
+        formData.append("twitterId", twitterUser.id)
+      }
 
       // Call the server action
       const result = await acceptRoast(formData)
@@ -193,16 +202,30 @@ export default function RoastRequestPage() {
                 <p className="text-xs text-center mt-2 text-muted-foreground">(Hover to preview)</p>
               </div>
 
-              {!connected && (
-                <div className="bg-orange-50 dark:bg-gray-800 p-4 rounded-lg">
-                  <p className="text-sm text-orange-800 dark:text-orange-300">
-                    Connect your Solana wallet to accept or reject this roast.
-                  </p>
-                  <div className="mt-2">
-                    <WalletButton />
+              {/* Connection Requirements */}
+              <div className="flex flex-col gap-4">
+                {!connected && (
+                  <div className="bg-orange-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <p className="text-sm text-orange-800 dark:text-orange-300">
+                      Connect your Solana wallet to accept or reject this roast.
+                    </p>
+                    <div className="mt-2">
+                      <WalletButton />
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+
+                {!isTwitterConnected && (
+                  <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-300">
+                      Connect your Twitter account to accept this roast.
+                    </p>
+                    <div className="mt-2">
+                      <TwitterLoginButton />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center justify-between">
                 <div>
@@ -217,7 +240,7 @@ export default function RoastRequestPage() {
                 </div>
               </div>
 
-              {connected && (
+              {connected && isTwitterConnected && (
                 <div className="flex items-start space-x-2 pt-2">
                   <Checkbox
                     id="share-on-x"
@@ -278,7 +301,7 @@ export default function RoastRequestPage() {
             <Button
               className="w-full sm:w-auto gap-2 bg-[#F26119] hover:bg-[#F26119]/90"
               onClick={handleAccept}
-              disabled={processing || !connected}
+              disabled={processing || !connected || !isTwitterConnected}
             >
               {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
               Accept & Get Paid
@@ -296,6 +319,7 @@ export default function RoastRequestPage() {
         amount={roast.amount}
         currency={roast.currency}
         onComplete={handleXPostComplete}
+        roastId={roast.id}
       />
     </div>
   )

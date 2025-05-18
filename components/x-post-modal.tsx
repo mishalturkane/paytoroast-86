@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Twitter, Loader2 } from "lucide-react"
 import XPostPreview from "@/components/x-post-preview"
 import { useToast } from "@/components/ui/use-toast"
+import { useTwitterAuth } from "@/components/twitter-auth-provider"
 import { shareOnX } from "@/app/actions/share-on-x"
 
 interface XPostModalProps {
@@ -43,6 +44,7 @@ export default function XPostModal({
   const [isPosting, setIsPosting] = useState(false)
   const [includeRoastText, setIncludeRoastText] = useState(true)
   const { toast } = useToast()
+  const { user: twitterUser } = useTwitterAuth()
 
   const handlePost = async () => {
     setIsPosting(true)
@@ -54,6 +56,12 @@ export default function XPostModal({
       formData.append("roasterName", roasterName)
       formData.append("roasteeName", receiverName)
       formData.append("includeFullText", includeRoastText.toString())
+
+      // Add Twitter info if available
+      if (twitterUser) {
+        formData.append("twitterUsername", twitterUser.username)
+        formData.append("twitterId", twitterUser.id)
+      }
 
       // Call the server action
       const result = await shareOnX(formData)
@@ -85,6 +93,9 @@ export default function XPostModal({
     }
   }
 
+  // Use Twitter username if available
+  const displayName = twitterUser ? `@${twitterUser.username}` : receiverName
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -110,7 +121,7 @@ export default function XPostModal({
             <h4 className="text-sm font-medium mb-2">Preview:</h4>
             <XPostPreview
               roasterName={roasterName}
-              receiverName={receiverName}
+              receiverName={displayName}
               message={includeRoastText ? message : "[Click to view roast]"}
               amount={amount}
               currency={currency}

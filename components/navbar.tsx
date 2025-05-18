@@ -5,6 +5,7 @@ import { useState } from "react"
 import { Menu, X, Twitter, Sparkles } from "lucide-react"
 import WalletButton from "@/components/wallet-button"
 import WalletBalance from "@/components/wallet-balance"
+import TwitterLoginButton from "@/components/twitter-login-button"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -44,6 +45,7 @@ export default function Navbar() {
             Create Roast
           </Link>
           <WalletBalance />
+          <TwitterLoginButton />
           <WalletButton />
         </nav>
 
@@ -85,9 +87,10 @@ export default function Navbar() {
             >
               Create Roast
             </Link>
-            <div className="flex items-center gap-2">
-              <WalletBalance />
+            <div className="flex flex-col gap-2">
+              <TwitterLoginButton />
               <WalletButton />
+              <WalletBalance />
             </div>
           </nav>
         </div>

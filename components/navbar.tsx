@@ -25,7 +25,7 @@ export default function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6 mr-auto">
-          <Link href="/feed" className="text-sm font-medium hover:text-primary">
+          <Link href="/feed" className="text-sm ml-4 font-medium hover:text-primary">
             Feed
           </Link>
           <Link href="/docs" className="text-sm font-medium hover:text-primary">

@@ -27,7 +27,11 @@ export const createRoast = (message: string, amount: number, currency: string, s
 
   // Save to localStorage
   const roasts = getRoasts()
-  localStorage.setItem("roasts", JSON.stringify([...roasts, roast]))
+
+  // Check if localStorage is available (client-side)
+  if (typeof window !== "undefined") {
+    localStorage.setItem("roasts", JSON.stringify([...roasts, roast]))
+  }
 
   return roast
 }
@@ -60,7 +64,10 @@ export const updateRoastStatus = (id: string, status: RoastStatus, transactionId
   }
 
   roasts[index] = updatedRoast
-  localStorage.setItem("roasts", JSON.stringify(roasts))
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem("roasts", JSON.stringify(roasts))
+  }
 
   return updatedRoast
 }
@@ -80,7 +87,10 @@ export const updateRoastEngagement = (id: string, likes = 0, comments = 0): Roas
   }
 
   roasts[index] = updatedRoast
-  localStorage.setItem("roasts", JSON.stringify(roasts))
+
+  if (typeof window !== "undefined") {
+    localStorage.setItem("roasts", JSON.stringify(roasts))
+  }
 
   return updatedRoast
 }

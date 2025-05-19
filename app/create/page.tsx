@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,12 @@ export default function CreateRoastPage() {
   const [roastId, setRoastId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [shareOnTwitter, setShareOnTwitter] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  // Handle hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -85,7 +91,6 @@ export default function CreateRoastPage() {
       // Add Twitter info
       if (twitterUser) {
         formData.append("twitterUsername", twitterUser.username)
-        formData.append("twitterId", twitterUser.id)
         formData.append("shareOnTwitter", shareOnTwitter.toString())
       }
 
@@ -106,6 +111,7 @@ export default function CreateRoastPage() {
         })
       }
     } catch (error) {
+      console.error("Error creating roast:", error)
       toast({
         title: "Error",
         description: "Failed to create roast. Please try again.",
@@ -132,6 +138,10 @@ export default function CreateRoastPage() {
   }
 
   const selectedCurrency = currencies.find((c) => c.id === currency) || currencies[0]
+
+  if (!mounted) {
+    return null // Prevent hydration mismatch
+  }
 
   return (
     <div className="container max-w-2xl py-12">

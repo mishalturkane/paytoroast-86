@@ -53,13 +53,6 @@ export function TwitterAuthProvider({ children }: { children: ReactNode }) {
     if (mounted) {
       try {
         // Simulate a popup window for Twitter OAuth
-        const width = 600
-        const height = 600
-        const left = window.innerWidth / 2 - width / 2
-        const top = window.innerHeight / 2 - height / 2
-
-        // In a real implementation, this would open the Twitter OAuth page
-        // For demo purposes, we'll simulate a successful login after a delay
         toast({
           title: "Connecting to Twitter...",
           description: "Please wait while we connect to your Twitter account.",

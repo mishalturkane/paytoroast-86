@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Flame, Copy, Check, Twitter } from "lucide-react"
+import { Flame, Copy, Check } from "lucide-react"
 import { useSolanaWallet } from "@/hooks/use-solana-wallet"
 import { useTwitterAuth } from "@/components/twitter-auth-provider"
 import { useToast } from "@/components/ui/use-toast"
@@ -31,7 +31,6 @@ export default function CreateRoastPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [roastId, setRoastId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [shareOnTwitter, setShareOnTwitter] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   // Handle hydration mismatch
@@ -91,7 +90,6 @@ export default function CreateRoastPage() {
       // Add Twitter info
       if (twitterUser) {
         formData.append("twitterUsername", twitterUser.username)
-        formData.append("shareOnTwitter", shareOnTwitter.toString())
       }
 
       // Call the server action
@@ -225,26 +223,11 @@ export default function CreateRoastPage() {
                 </div>
               </div>
 
-              {isTwitterConnected && (
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="shareOnTwitter"
-                    checked={shareOnTwitter}
-                    onChange={(e) => setShareOnTwitter(e.target.checked)}
-                    className="rounded border-gray-300 text-[#1DA1F2] focus:ring-[#1DA1F2]"
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <Label htmlFor="shareOnTwitter" className="flex items-center gap-1.5">
-                      <Twitter size={16} className="text-[#1DA1F2]" />
-                      Share on Twitter when created
-                    </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Post a tweet about your roast (without revealing the full message)
-                    </p>
-                  </div>
-                </div>
-              )}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-300">
+                  When the recipient accepts this roast, they'll have the option to share it on Twitter.
+                </p>
+              </div>
 
               <p className="text-xs text-muted-foreground">
                 This is the amount the person will receive if they accept your roast.
@@ -279,15 +262,6 @@ export default function CreateRoastPage() {
                 the {amount} {selectedCurrency.symbol} you offered.
               </p>
             </div>
-
-            {shareOnTwitter && isTwitterConnected && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                  <Twitter size={16} className="text-[#1DA1F2]" />A tweet has been posted from your account about this
-                  roast!
-                </p>
-              </div>
-            )}
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row gap-3">
             <Button variant="outline" className="w-full sm:w-auto gap-2" onClick={handleCopyLink}>

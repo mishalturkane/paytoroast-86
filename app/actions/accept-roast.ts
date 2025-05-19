@@ -8,6 +8,7 @@ interface AcceptRoastResponse {
   success: boolean
   error?: string
   transactionId?: string
+  tweetPosted?: boolean
 }
 
 export async function acceptRoast(formData: FormData): Promise<AcceptRoastResponse> {
@@ -15,6 +16,8 @@ export async function acceptRoast(formData: FormData): Promise<AcceptRoastRespon
     const roastId = formData.get("roastId") as string
     const receiverAddress = formData.get("receiverAddress") as string
     const shareOnX = formData.get("shareOnX") === "true"
+    const twitterUsername = formData.get("twitterUsername") as string
+    const twitterId = formData.get("twitterId") as string
 
     if (!roastId) {
       return { success: false, error: "Roast ID is required" }
@@ -41,16 +44,24 @@ export async function acceptRoast(formData: FormData): Promise<AcceptRoastRespon
     // Update the roast status
     updateRoastStatus(roastId, RoastStatus.ACCEPTED, transactionId)
 
-    // If shareOnX is true, we would trigger a post to X/Twitter here
-    // This would typically involve calling a third-party API or service
+    // Handle Twitter posting
+    let tweetPosted = false
+    if (shareOnX && twitterUsername) {
+      // In a real implementation, this would call the Twitter API to post a tweet
+      // For demo purposes, we'll just simulate a successful tweet
+      console.log(`Tweet posted by @${twitterUsername} about accepting roast ${roastId}`)
+      tweetPosted = true
+    }
 
     // Revalidate the feed page to show the updated roast
     revalidatePath("/feed")
     revalidatePath(`/roast/${roastId}`)
+    revalidatePath("/x-posts")
 
     return {
       success: true,
       transactionId,
+      tweetPosted,
     }
   } catch (error) {
     console.error("Error accepting roast:", error)

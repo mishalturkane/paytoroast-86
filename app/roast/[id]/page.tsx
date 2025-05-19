@@ -87,9 +87,14 @@ export default function RoastRequestPage() {
           description: `You've received ${formatCryptoAmount(roast.amount, roast.currency)}!`,
         })
 
-        // If user wants to share on X, open the modal
-        if (shareOnX) {
+        // If user wants to share on X and the tweet wasn't already posted by the server
+        if (shareOnX && !result.tweetPosted) {
           setXPostModalOpen(true)
+        } else if (result.tweetPosted) {
+          toast({
+            title: "Posted to Twitter",
+            description: "Your acceptance of this roast has been shared on Twitter!",
+          })
         }
       } else {
         toast({
@@ -218,7 +223,7 @@ export default function RoastRequestPage() {
                 {!isTwitterConnected && (
                   <div className="bg-blue-50 dark:bg-gray-800 p-4 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      Connect your Twitter account to accept this roast.
+                      Connect your Twitter account to accept this roast and share it on Twitter.
                     </p>
                     <div className="mt-2">
                       <TwitterLoginButton />
@@ -250,9 +255,11 @@ export default function RoastRequestPage() {
                   <div className="grid gap-1.5 leading-none">
                     <Label htmlFor="share-on-x" className="flex items-center gap-1.5">
                       <Twitter size={16} className="text-[#1DA1F2]" />
-                      Share on X when accepted
+                      Share on Twitter when accepted
                     </Label>
-                    <p className="text-sm text-muted-foreground">Post this roast to X (Twitter) when you accept it</p>
+                    <p className="text-sm text-muted-foreground">
+                      Post this roast to Twitter when you accept it to let everyone know about the burn!
+                    </p>
                   </div>
                 </div>
               )}
@@ -279,7 +286,7 @@ export default function RoastRequestPage() {
                     onClick={() => setXPostModalOpen(true)}
                   >
                     <Twitter size={16} />
-                    Share on X
+                    Share on Twitter
                   </Button>
                 </div>
               )}

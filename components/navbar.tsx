@@ -24,7 +24,7 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-4">
+        <nav className="hidden md:flex items-center gap-6 mr-auto">
           <Link href="/feed" className="text-sm font-medium hover:text-primary">
             Feed
           </Link>
@@ -38,6 +38,9 @@ export default function Navbar() {
             <Sparkles size={16} className="text-yellow-500" />
             NFT Market
           </Link>
+        </nav>
+
+        <div className="hidden md:flex items-center gap-4">
           <Link
             href="/create"
             className="text-sm font-medium bg-[#F26119] text-white px-4 py-2 rounded-md hover:bg-[#F26119]/90 transition-colors"
@@ -47,7 +50,7 @@ export default function Navbar() {
           <WalletBalance />
           <TwitterLoginButton />
           <WalletButton />
-        </nav>
+        </div>
 
         {/* Mobile Menu Button */}
         <button className="md:hidden p-2" onClick={toggleMenu} aria-label={isMenuOpen ? "Close menu" : "Open menu"}>

@@ -20,7 +20,6 @@ export async function createRoast(formData: FormData): Promise<CreateRoastRespon
     const currency = formData.get("currency") as string
     const senderAddress = formData.get("senderAddress") as string
     const twitterUsername = (formData.get("twitterUsername") as string) || undefined
-    const shareOnTwitter = formData.get("shareOnTwitter") === "true"
 
     // Validate inputs
     if (!message || message.trim() === "") {

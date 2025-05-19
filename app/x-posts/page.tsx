@@ -1,60 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import XPostPreview from "@/components/x-post-preview"
 import NFTRoastCard from "@/components/nft-roast-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-
-// Sample roasts for the page
-const sampleRoasts = [
-  {
-    id: "roast1",
-    message: "Bob is very dumb, then these duncky.",
-    amount: 0.5,
-    currency: "sol",
-    senderAddress: "Alice",
-    status: "accepted" as any,
-    createdAt: new Date().toISOString(),
-    transactionId: "tx123",
-    likes: 24,
-    comments: 5,
-    views: 142,
-  },
-  {
-    id: "roast2",
-    message: "Your crypto portfolio is so bad, even LUNA investors feel sorry for you.",
-    amount: 0.75,
-    currency: "sol",
-    senderAddress: "Charlie",
-    status: "accepted" as any,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    transactionId: "tx456",
-    likes: 18,
-    comments: 3,
-    views: 89,
-  },
-  {
-    id: "roast3",
-    message: "You HODL your opinions like you HODL your shitcoins - way past their expiration date.",
-    amount: 50,
-    currency: "usdc",
-    senderAddress: "Eve",
-    status: "accepted" as any,
-    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    transactionId: "tx789",
-    likes: 42,
-    comments: 7,
-    views: 231,
-  },
-]
-
-// Update the roaster and roastee names
-const roasteeNames = ["Bob", "Dave", "Frank"]
+import { ArrowLeft, Loader2 } from "lucide-react"
+import { getAcceptedRoasts } from "@/lib/roast-service"
+import type { Roast } from "@/types/roast"
 
 export default function XPostsPage() {
   const [viewMode, setViewMode] = useState<"standard" | "nft">("standard")
+  const [roasts, setRoasts] = useState<Roast[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Fetch accepted roasts
+    const fetchRoasts = () => {
+      try {
+        const acceptedRoasts = getAcceptedRoasts()
+        setRoasts(acceptedRoasts)
+      } catch (error) {
+        console.error("Failed to fetch roasts:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRoasts()
+  }, [])
+
+  // Generate roaster and roastee names based on sender address
+  const getRoasterName = (address: string) => `User ${address.slice(0, 4)}`
+  const getRoasteeName = (address: string) =>
+    `User ${(Number.parseInt(address.slice(0, 4), 16) + 1).toString(16).slice(0, 4)}`
+
+  if (loading) {
+    return (
+      <div className="container py-12 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="container py-12">
@@ -66,9 +53,9 @@ export default function XPostsPage() {
           </Link>
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold">X (Twitter) Posts</h1>
+              <h1 className="text-3xl font-bold">Twitter Posts</h1>
               <p className="text-muted-foreground mt-2">
-                When roasts are accepted, they can be automatically shared on X (Twitter).
+                When roasts are accepted, they are automatically shared on Twitter.
               </p>
             </div>
             <div className="flex items-center bg-muted rounded-md p-1">
@@ -94,44 +81,38 @@ export default function XPostsPage() {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Recent X Posts</CardTitle>
-            <CardDescription>Check out the latest roasts that have been shared on X (Twitter).</CardDescription>
+            <CardTitle>Recent Twitter Posts</CardTitle>
+            <CardDescription>Check out the latest roasts that have been shared on Twitter.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            {viewMode === "standard" ? (
+            {roasts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No roasts have been accepted and shared on Twitter yet.</p>
+                <Link href="/feed" className="inline-flex items-center mt-4 text-sm text-primary hover:underline">
+                  Browse roasts in the feed
+                </Link>
+              </div>
+            ) : viewMode === "standard" ? (
               <>
-                <XPostPreview
-                  roasterName="Alice"
-                  receiverName="Bob"
-                  message="Bob is very dumb, then these duncky."
-                  amount={0.5}
-                  currency="SOL"
-                />
-
-                <XPostPreview
-                  roasterName="Charlie"
-                  receiverName="Dave"
-                  message="Your crypto portfolio is so bad, even LUNA investors feel sorry for you."
-                  amount={1.2}
-                  currency="SOL"
-                />
-
-                <XPostPreview
-                  roasterName="Eve"
-                  receiverName="Frank"
-                  message="You HODL your opinions like you HODL your shitcoins - way past their expiration date."
-                  amount={50}
-                  currency="USDC"
-                />
+                {roasts.map((roast) => (
+                  <XPostPreview
+                    key={roast.id}
+                    roasterName={getRoasterName(roast.senderAddress)}
+                    receiverName={getRoasteeName(roast.senderAddress)}
+                    message={roast.message}
+                    amount={roast.amount}
+                    currency={roast.currency}
+                  />
+                ))}
               </>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {sampleRoasts.map((roast, index) => (
+                {roasts.map((roast) => (
                   <NFTRoastCard
                     key={roast.id}
                     roast={roast}
-                    roasterName={roast.senderAddress}
-                    roasteeName={roasteeNames[index]}
+                    roasterName={getRoasterName(roast.senderAddress)}
+                    roasteeName={getRoasteeName(roast.senderAddress)}
                     xPostLink={`https://x.com/paytoroast/status/${roast.id}`}
                   />
                 ))}
